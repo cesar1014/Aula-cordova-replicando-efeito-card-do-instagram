@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>Cards App</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+        }
+        .card {
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            margin: 10px auto;
+            padding: 15px;
+            width: 80%;
+            box-sizing: border-box;
+        }
+        .card img {
+            max-width: 100%;
+            border-radius: 5px;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container" id="cardContainer"></div>
+
+    <script>
+        const loadedIds = new Set();
+        let loading = false;
+
+        function fetchCard(id) {
+            return fetch(`https://jsonplaceholder.typicode.com/photos/${id}`)
+                .then(response => response.json())
+                .catch(error => console.error('Erro ao buscar a imagem:', error));
+        }
+
+        function loadCards(count) {
+            if (loading) return;
+            loading = true;
+
+            const promises = [];
+
+            for (let i = 0; i < count; i++) {
+                let randomId;
+                do {
+                    randomId = Math.floor(Math.random() * 50) + 1;
+                } while (loadedIds.has(randomId));
+
+                loadedIds.add(randomId);
+                promises.push(fetchCard(randomId));
+            }
+
+            Promise.all(promises)
+                .then(cards => {
+                    cards.forEach(cardData => {
+                        let card = document.createElement('div');
+                        card.className = 'card';
+                        card.innerHTML = `
+                            <img src="${cardData.url}" alt="${cardData.title}">
+                            <h3>${cardData.title}</h3>
+                        `;
+                        document.getElementById('cardContainer').appendChild(card);
+                    });
+                })
+                .finally(() => {
+                    loading = false;
+                });
+        }
+
+        window.addEventListener('scroll', () => {
+            if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight - 100) {
+                loadCards(3);
+            }
+        });
+
+        loadCards(3);
+    </script>
+</body>
+</html>
